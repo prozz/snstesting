@@ -6,7 +6,13 @@
 Package `snstesting` simplifies checking what messages arrive at any SNS topic from the inside of your integration tests.
 It does it by subscribing to SNS via ad-hoc SQS queue that is cleaned-up after the test.
 
-### Usage
+## Installation
+
+```shell
+go get github.com/prozz/snstesting
+```
+
+## Usage
 
 ```go
 // make sure you can access AWS
@@ -26,3 +32,10 @@ msg, err := subscriber.Receive(ctx)
 assert.NoError(t, err)
 assert.NotEmpty(t, msg)
 ```
+
+## Contributing
+Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
+Please make sure to update tests.
+
+## License
+[MIT](https://choosealicense.com/licenses/mit/)
