@@ -3,7 +3,7 @@
 ![test](https://github.com/prozz/snstesting/workflows/test/badge.svg?branch=main)
 ![golangci-lint](https://github.com/prozz/snstesting/workflows/lint/badge.svg?branch=main)
 
-Package snstesting simplifies checking what messages arrive at any SNS topic from the inside of your integration tests.
+Package `snstesting` simplifies checking what messages arrive at any SNS topic from the inside of your integration tests.
 It does it by subscribing to SNS via ad-hoc SQS queue that is cleaned-up after the test.
 
 ### Usage
