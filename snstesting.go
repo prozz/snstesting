@@ -79,8 +79,8 @@ func NewSubscriber(ctx context.Context, SNS SNSAPI, SQS SQSAPI, topicName string
 		AttributeNames: []types.QueueAttributeName{types.QueueAttributeNameQueueArn},
 	})
 	if err != nil {
-		_ = cleanupQueue(ctx, SQS, *createQueueOutput.QueueUrl)
-		return Subscriber{}, err
+		return Subscriber{}, fmt.Errorf("get queue attributes failure: %v",
+			combineErr(err, cleanupQueue(ctx, SQS, *createQueueOutput.QueueUrl)))
 	}
 
 	queueArn := queueAttrsOutput.Attributes[string(types.QueueAttributeNameQueueArn)]
@@ -96,8 +96,8 @@ func NewSubscriber(ctx context.Context, SNS SNSAPI, SQS SQSAPI, topicName string
 		},
 	})
 	if err != nil {
-		_ = cleanupQueue(ctx, SQS, *createQueueOutput.QueueUrl)
-		return Subscriber{}, err
+		return Subscriber{}, fmt.Errorf("set queue attributes failure: %v",
+			combineErr(err, cleanupQueue(ctx, SQS, *createQueueOutput.QueueUrl)))
 	}
 
 	subscribeOutput, err := SNS.Subscribe(ctx, &sns.SubscribeInput{
@@ -106,8 +106,8 @@ func NewSubscriber(ctx context.Context, SNS SNSAPI, SQS SQSAPI, topicName string
 		Endpoint: aws.String(queueArn),
 	})
 	if err != nil {
-		_ = cleanupQueue(ctx, SQS, *createQueueOutput.QueueUrl)
-		return Subscriber{}, err
+		return Subscriber{}, fmt.Errorf("subscribe failure: %v",
+			combineErr(err, cleanupQueue(ctx, SQS, *createQueueOutput.QueueUrl)))
 	}
 
 	return Subscriber{

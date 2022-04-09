@@ -6,14 +6,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/prozz/snstesting"
-	"github.com/prozz/snstesting/mock"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
 	snstypes "github.com/aws/aws-sdk-go-v2/service/sns/types"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	sqstypes "github.com/aws/aws-sdk-go-v2/service/sqs/types"
 	"github.com/golang/mock/gomock"
+	"github.com/prozz/snstesting"
+	"github.com/prozz/snstesting/mock"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -107,7 +107,7 @@ func TestNewSubscriber(t *testing.T) {
 		SQS.EXPECT().GetQueueAttributes(ctx, &sqs.GetQueueAttributesInput{
 			QueueUrl:       aws.String("http://queue.url"),
 			AttributeNames: []sqstypes.QueueAttributeName{sqstypes.QueueAttributeNameQueueArn},
-		}).Return(nil, assert.AnError)
+		}).Return(nil, errors.New("foo"))
 
 		SQS.EXPECT().DeleteQueue(ctx, &sqs.DeleteQueueInput{
 			QueueUrl: aws.String("http://queue.url"),
@@ -115,6 +115,44 @@ func TestNewSubscriber(t *testing.T) {
 
 		subscriber, err := snstesting.NewSubscriber(ctx, SNS, SQS, "sometopic")
 		assert.Error(t, err)
+		assert.EqualError(t, err, "get queue attributes failure: foo")
+		assert.Empty(t, subscriber)
+	})
+
+	t.Run("error getting queue attributes and on cleanup", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		SQS := mock.NewMockSQSAPI(ctrl)
+		SNS := mock.NewMockSNSAPI(ctrl)
+
+		SNS.EXPECT().ListTopics(ctx, &sns.ListTopicsInput{NextToken: nil}).
+			Return(&sns.ListTopicsOutput{
+				Topics: []snstypes.Topic{
+					{TopicArn: aws.String("arn:foo:bar:sometopic")},
+				},
+			}, nil)
+
+		SQS.EXPECT().CreateQueue(ctx, gomock.AssignableToTypeOf(&sqs.CreateQueueInput{})).
+			Do(func(ctx context.Context, input *sqs.CreateQueueInput, opts ...*sns.Options) {
+				if assert.NotNil(t, input.QueueName) {
+					assert.True(t, strings.HasPrefix(*input.QueueName, "snstesting_"))
+				}
+			}).
+			Return(&sqs.CreateQueueOutput{
+				QueueUrl: aws.String("http://queue.url"),
+			}, nil)
+
+		SQS.EXPECT().GetQueueAttributes(ctx, &sqs.GetQueueAttributesInput{
+			QueueUrl:       aws.String("http://queue.url"),
+			AttributeNames: []sqstypes.QueueAttributeName{sqstypes.QueueAttributeNameQueueArn},
+		}).Return(nil, errors.New("foo"))
+
+		SQS.EXPECT().DeleteQueue(ctx, &sqs.DeleteQueueInput{
+			QueueUrl: aws.String("http://queue.url"),
+		}).Return(nil, errors.New("bar"))
+
+		subscriber, err := snstesting.NewSubscriber(ctx, SNS, SQS, "sometopic")
+		assert.Error(t, err)
+		assert.EqualError(t, err, "get queue attributes failure: foo,bar")
 		assert.Empty(t, subscriber)
 	})
 
@@ -157,7 +195,7 @@ func TestNewSubscriber(t *testing.T) {
 				assert.True(t, strings.Contains(input.Attributes["Policy"], `"Resource": "arn:foo:bar:testingqueue"`))
 				assert.True(t, strings.Contains(input.Attributes["Policy"], `"aws:SourceArn": "arn:foo:bar:sometopic"`))
 			}).
-			Return(nil, assert.AnError)
+			Return(nil, errors.New("foo"))
 
 		SQS.EXPECT().DeleteQueue(ctx, &sqs.DeleteQueueInput{
 			QueueUrl: aws.String("http://queue.url"),
@@ -165,6 +203,58 @@ func TestNewSubscriber(t *testing.T) {
 
 		subscriber, err := snstesting.NewSubscriber(ctx, SNS, SQS, "sometopic")
 		assert.Error(t, err)
+		assert.EqualError(t, err, "set queue attributes failure: foo")
+		assert.Empty(t, subscriber)
+	})
+
+	t.Run("error setting queue attributes and on cleanup", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		SQS := mock.NewMockSQSAPI(ctrl)
+		SNS := mock.NewMockSNSAPI(ctrl)
+
+		SNS.EXPECT().ListTopics(ctx, &sns.ListTopicsInput{NextToken: nil}).
+			Return(&sns.ListTopicsOutput{
+				Topics: []snstypes.Topic{
+					{TopicArn: aws.String("arn:foo:bar:sometopic")},
+				},
+			}, nil)
+
+		SQS.EXPECT().CreateQueue(ctx, gomock.AssignableToTypeOf(&sqs.CreateQueueInput{})).
+			Do(func(ctx context.Context, input *sqs.CreateQueueInput, opts ...*sns.Options) {
+				if assert.NotNil(t, input.QueueName) {
+					assert.True(t, strings.HasPrefix(*input.QueueName, "snstesting_"))
+				}
+			}).
+			Return(&sqs.CreateQueueOutput{
+				QueueUrl: aws.String("http://queue.url"),
+			}, nil)
+
+		SQS.EXPECT().GetQueueAttributes(ctx, &sqs.GetQueueAttributesInput{
+			QueueUrl:       aws.String("http://queue.url"),
+			AttributeNames: []sqstypes.QueueAttributeName{sqstypes.QueueAttributeNameQueueArn},
+		}).Return(&sqs.GetQueueAttributesOutput{
+			Attributes: map[string]string{
+				"QueueArn": "arn:foo:bar:testingqueue",
+			},
+		}, nil)
+
+		SQS.EXPECT().SetQueueAttributes(ctx, gomock.AssignableToTypeOf(&sqs.SetQueueAttributesInput{})).
+			Do(func(ctx context.Context, input *sqs.SetQueueAttributesInput, opts ...*sns.Options) {
+				if assert.NotNil(t, input.QueueUrl) {
+					assert.Equal(t, "http://queue.url", *input.QueueUrl)
+				}
+				assert.True(t, strings.Contains(input.Attributes["Policy"], `"Resource": "arn:foo:bar:testingqueue"`))
+				assert.True(t, strings.Contains(input.Attributes["Policy"], `"aws:SourceArn": "arn:foo:bar:sometopic"`))
+			}).
+			Return(nil, errors.New("foo"))
+
+		SQS.EXPECT().DeleteQueue(ctx, &sqs.DeleteQueueInput{
+			QueueUrl: aws.String("http://queue.url"),
+		}).Return(nil, errors.New("bar"))
+
+		subscriber, err := snstesting.NewSubscriber(ctx, SNS, SQS, "sometopic")
+		assert.Error(t, err)
+		assert.EqualError(t, err, "set queue attributes failure: foo,bar")
 		assert.Empty(t, subscriber)
 	})
 
@@ -213,7 +303,7 @@ func TestNewSubscriber(t *testing.T) {
 			Protocol: aws.String("sqs"),
 			TopicArn: aws.String("arn:foo:bar:sometopic"),
 			Endpoint: aws.String("arn:foo:bar:testingqueue"),
-		}).Return(nil, assert.AnError)
+		}).Return(nil, errors.New("foo"))
 
 		SQS.EXPECT().DeleteQueue(ctx, &sqs.DeleteQueueInput{
 			QueueUrl: aws.String("http://queue.url"),
@@ -221,6 +311,64 @@ func TestNewSubscriber(t *testing.T) {
 
 		subscriber, err := snstesting.NewSubscriber(ctx, SNS, SQS, "sometopic")
 		assert.Error(t, err)
+		assert.EqualError(t, err, "subscribe failure: foo")
+		assert.Empty(t, subscriber)
+	})
+
+	t.Run("error subscribing to sns and on cleanup", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		SQS := mock.NewMockSQSAPI(ctrl)
+		SNS := mock.NewMockSNSAPI(ctrl)
+
+		SNS.EXPECT().ListTopics(ctx, &sns.ListTopicsInput{NextToken: nil}).
+			Return(&sns.ListTopicsOutput{
+				Topics: []snstypes.Topic{
+					{TopicArn: aws.String("arn:foo:bar:sometopic")},
+				},
+			}, nil)
+
+		SQS.EXPECT().CreateQueue(ctx, gomock.AssignableToTypeOf(&sqs.CreateQueueInput{})).
+			Do(func(ctx context.Context, input *sqs.CreateQueueInput, opts ...*sns.Options) {
+				if assert.NotNil(t, input.QueueName) {
+					assert.True(t, strings.HasPrefix(*input.QueueName, "snstesting_"))
+				}
+			}).
+			Return(&sqs.CreateQueueOutput{
+				QueueUrl: aws.String("http://queue.url"),
+			}, nil)
+
+		SQS.EXPECT().GetQueueAttributes(ctx, &sqs.GetQueueAttributesInput{
+			QueueUrl:       aws.String("http://queue.url"),
+			AttributeNames: []sqstypes.QueueAttributeName{sqstypes.QueueAttributeNameQueueArn},
+		}).Return(&sqs.GetQueueAttributesOutput{
+			Attributes: map[string]string{
+				"QueueArn": "arn:foo:bar:testingqueue",
+			},
+		}, nil)
+
+		SQS.EXPECT().SetQueueAttributes(ctx, gomock.AssignableToTypeOf(&sqs.SetQueueAttributesInput{})).
+			Do(func(ctx context.Context, input *sqs.SetQueueAttributesInput, opts ...*sns.Options) {
+				if assert.NotNil(t, input.QueueUrl) {
+					assert.Equal(t, "http://queue.url", *input.QueueUrl)
+				}
+				assert.True(t, strings.Contains(input.Attributes["Policy"], `"Resource": "arn:foo:bar:testingqueue"`))
+				assert.True(t, strings.Contains(input.Attributes["Policy"], `"aws:SourceArn": "arn:foo:bar:sometopic"`))
+			}).
+			Return(&sqs.SetQueueAttributesOutput{}, nil)
+
+		SNS.EXPECT().Subscribe(ctx, &sns.SubscribeInput{
+			Protocol: aws.String("sqs"),
+			TopicArn: aws.String("arn:foo:bar:sometopic"),
+			Endpoint: aws.String("arn:foo:bar:testingqueue"),
+		}).Return(nil, errors.New("foo"))
+
+		SQS.EXPECT().DeleteQueue(ctx, &sqs.DeleteQueueInput{
+			QueueUrl: aws.String("http://queue.url"),
+		}).Return(nil, errors.New("bar"))
+
+		subscriber, err := snstesting.NewSubscriber(ctx, SNS, SQS, "sometopic")
+		assert.Error(t, err)
+		assert.EqualError(t, err, "subscribe failure: foo,bar")
 		assert.Empty(t, subscriber)
 	})
 
