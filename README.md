@@ -22,16 +22,17 @@ if err != nil {
 }
 
 // subscribe to SNS and cleanup at the end
-subscriber, cleanupFn := snstesting.New(t, cfg, topicName)
-defer cleanupFn()
+receive, cleanup := snstesting.New(t, cfg, topicName)
+defer cleanup()
 
 // fire your process here, whatever it is ;)
 
 // get single message from SNS and examine it, repeat if needed
-msg, err := subscriber.Receive(ctx)
+msg := receive()
 assert.NoError(t, err)
-assert.NotEmpty(t, msg)
 ```
+
+In case you need more control over error handling, context or long polling settings, please use `snstesting.NewSubscriber` directly.
 
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
