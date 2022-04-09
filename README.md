@@ -29,7 +29,7 @@ defer cleanup()
 
 // get single message from SNS and examine it, repeat if needed
 msg := receive()
-assert.NoError(t, err)
+assert.NotEmpty(t, msg)
 ```
 
 In case you need more control over error handling, context or long polling settings, please use `snstesting.NewSubscriber` directly.
