@@ -34,16 +34,13 @@ type Config struct {
 	SubscriptionARN string
 }
 
-// CleanupFn to run after test is finished, to tidy up ad-hoc queue and subscription created.
-type CleanupFn func()
-
 // ReceiveFn checks for message that arrived at SNS (via ad-hoc SQS queue), can be called repeatedly.
 type ReceiveFn func() string
 
 // New creates Subscriber for testing purposes based on provided AWS configuration.
 // In case of an error, t.Fatal is executed.
 // In case more control is needed over Subscriber, or it's Config, please use NewSubscriber.
-func New(t *testing.T, cfg aws.Config, topicName string) (ReceiveFn, CleanupFn) {
+func New(t *testing.T, cfg aws.Config, topicName string) ReceiveFn {
 	t.Helper()
 
 	ctx := context.Background()
@@ -63,13 +60,15 @@ func New(t *testing.T, cfg aws.Config, topicName string) (ReceiveFn, CleanupFn) 
 		}
 		return msg
 	}
-	cleanupFn := func() {
+
+	t.Cleanup(func() {
 		err := s.Cleanup(ctx)
 		if err != nil {
 			t.Fatal(err)
 		}
-	}
-	return receiveFn, cleanupFn
+	})
+
+	return receiveFn
 }
 
 // NewSubscriber creates Subscriber instance for ad-hoc subscribing to SNS topic.

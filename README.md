@@ -21,9 +21,8 @@ if err != nil {
     t.Fatalf("configuration error: %v ", err)
 }
 
-// subscribe to SNS and cleanup at the end
-receive, cleanup := snstesting.New(t, cfg, topicName)
-defer cleanup()
+// subscribe to SNS, all resources created here will be cleaned up at the end of the test
+receive := snstesting.New(t, cfg, topicName)
 
 // fire your process here, whatever it is ;)
 
