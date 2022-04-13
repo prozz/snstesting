@@ -53,14 +53,6 @@ func New(t *testing.T, cfg aws.Config, topicName string) ReceiveFn {
 		t.Fatal(err)
 	}
 
-	receiveFn := func() string {
-		msg, err := s.Receive(ctx)
-		if err != nil {
-			t.Fatal(err)
-		}
-		return msg
-	}
-
 	t.Cleanup(func() {
 		err := s.Cleanup(ctx)
 		if err != nil {
@@ -68,7 +60,13 @@ func New(t *testing.T, cfg aws.Config, topicName string) ReceiveFn {
 		}
 	})
 
-	return receiveFn
+	return func() string {
+		msg, err := s.Receive(ctx)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return msg
+	}
 }
 
 // NewSubscriber creates Subscriber instance for ad-hoc subscribing to SNS topic.
