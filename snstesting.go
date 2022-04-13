@@ -38,6 +38,7 @@ type Config struct {
 type ReceiveFn func() string
 
 // New creates Subscriber for testing purposes based on provided AWS configuration.
+// Ad-hoc resources are cleaned up after the test automatically with use of t.Cleanup.
 // In case of an error, t.Fatal is executed.
 // In case more control is needed over Subscriber, or it's Config, please use NewSubscriber.
 func New(t *testing.T, cfg aws.Config, topicName string) ReceiveFn {
