@@ -3,7 +3,7 @@ module github.com/prozz/snstesting
 go 1.18
 
 require (
-	github.com/aws/aws-sdk-go-v2 v1.16.3
+	github.com/aws/aws-sdk-go-v2 v1.16.4
 	github.com/aws/aws-sdk-go-v2/service/sns v1.17.5
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.18.4
 	github.com/golang/mock v1.6.0
