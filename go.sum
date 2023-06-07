@@ -8,10 +8,10 @@ github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.30/go.mod h1:LUBAO3zNXQ
 github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.9/go.mod h1:08tUpeSGN33QKSO7fwxXczNfiwCpbj+GxK6XKwqWVv0=
 github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.24 h1:r+Kv+SEJquhAZXaJ7G4u44cIwXV3f8K+N482NNAzJZA=
 github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.24/go.mod h1:gAuCezX/gob6BSMbItsSlMb6WZGV7K2+fWOvk8xBSto=
-github.com/aws/aws-sdk-go-v2/service/sns v1.17.10 h1:ZZuqucIwjbUEJqxxR++VDZX9BcMbX5ZcQaKoWul/ELk=
-github.com/aws/aws-sdk-go-v2/service/sns v1.17.10/go.mod h1:uITsRNVMeCB3MkWpXxXw0eDz8pW4TYLzj+eyQtbhSxM=
-github.com/aws/aws-sdk-go-v2/service/sqs v1.20.5 h1:MUot0cyxRrl/dmLFNymQ4O69BAvKBFPJpPStdHqXdt8=
-github.com/aws/aws-sdk-go-v2/service/sqs v1.20.5/go.mod h1:EVH2yuc08LCy7JedqgaLLT4gl/yASo0jT3BP3Krv2VQ=
+github.com/aws/aws-sdk-go-v2/service/sns v1.20.5 h1:GLDH9ttIHdEky/8QxmqrLVsGnUItgclC3gXEMDqAM9s=
+github.com/aws/aws-sdk-go-v2/service/sns v1.20.5/go.mod h1:ELnXGVIlGHeE13SwMqe02mlvhglmq7I9b0+b9p3j50k=
+github.com/aws/aws-sdk-go-v2/service/sqs v1.19.1 h1:HaQD4g8eumwEW218TgQzhnwTXmq77ZogA67SxBnGyPc=
+github.com/aws/aws-sdk-go-v2/service/sqs v1.19.1/go.mod h1:A94o564Gj+Yn+7QO1eLFeI7UVv3riy/YBFOfICVqFvU=
 github.com/aws/smithy-go v1.12.0/go.mod h1:Tg+OJXh4MB2R/uN61Ko2f6hTZwB/ZYGOtib8J3gBHzA=
 github.com/aws/smithy-go v1.13.5 h1:hgz0X/DX0dGqTYpGALqXJoRKRj5oQ7150i5FdTePzO8=
 github.com/aws/smithy-go v1.13.5/go.mod h1:Tg+OJXh4MB2R/uN61Ko2f6hTZwB/ZYGOtib8J3gBHzA=
